@@ -1,5 +1,3 @@
-use std::cmp::Ordering;
-
 #[derive(Debug, PartialEq)]
 pub struct Data {
     pub value: f64,
@@ -24,16 +22,8 @@ pub fn weighted_median(input: &mut [Data]) -> f64 {
     }
 
     let pivot_index = input.len() / 2;
-    let (lower, pivot, higher) = input.select_nth_unstable_by(pivot_index, |a, b| {
-        if a.value > b.value {
-            return Ordering::Greater;
-        }
-        if b.value > a.value {
-            return Ordering::Less;
-        }
-
-        return Ordering::Equal;
-    });
+    let (lower, pivot, higher) =
+        input.select_nth_unstable_by(pivot_index, |a, b| a.value.partial_cmp(&b.value).unwrap());
 
     let lower_weight_sum = lower
         .into_iter()
