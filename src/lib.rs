@@ -4,8 +4,14 @@ pub struct Data {
 }
 
 pub fn weighted_median(input: &[Data]) -> f64 {
-    if input.len() == 1 {
+    let n = input.len();
+
+    if n == 1 {
         return input[0].value;
+    }
+
+    if n == 2 {
+        return (input[0].value + input[1].value) / 2.0;
     }
 
     return -1.0;
@@ -24,5 +30,22 @@ mod tests {
             }]),
             7.0
         );
+    }
+
+    #[test]
+    fn two_elements() {
+        assert_eq!(
+            weighted_median(&[
+                Data {
+                    value: 7.0,
+                    weight: 1.0
+                },
+                Data {
+                    value: 8.0,
+                    weight: 2.0
+                }
+            ]),
+            7.5
+        )
     }
 }
