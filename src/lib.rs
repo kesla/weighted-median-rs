@@ -43,10 +43,6 @@ pub fn weighted_median(input: &mut [Data]) -> f64 {
         .fold(0.0, |accum, item| accum + item.weight);
     let weight_sum = lower_weight_sum + pivot.weight + higher_weight_sum;
 
-    println!("{:#?}", lower);
-    println!("{:#?}", pivot);
-    println!("{:#?}", higher);
-
     if lower_weight_sum / weight_sum < 0.5 && higher_weight_sum / weight_sum < 0.5 {
         return pivot.value;
     }
@@ -56,9 +52,7 @@ pub fn weighted_median(input: &mut [Data]) -> f64 {
         //     return lower[0].value
         // }
         // return weighted_median(&mut .concat());
-        println!("b: {}", input[pivot_index].weight);
         input[pivot_index].weight = input[pivot_index].weight + higher_weight_sum;
-        println!("a: {}", input[pivot_index].weight);
         weighted_median(&mut input[..pivot_index + 1])
     } else {
         // if higher.len() == 1 {
