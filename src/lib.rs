@@ -4,6 +4,12 @@ pub struct Data {
     pub weight: f64,
 }
 
+fn weight_sum(input: &mut [Data]) -> f64 {
+    return input
+        .into_iter()
+        .fold(0.0, |accum, item| accum + item.weight);
+}
+
 pub fn weighted_median(input: &mut [Data]) -> f64 {
     let n = input.len();
 
@@ -25,12 +31,8 @@ pub fn weighted_median(input: &mut [Data]) -> f64 {
     let (lower, pivot, higher) =
         input.select_nth_unstable_by(pivot_index, |a, b| a.value.partial_cmp(&b.value).unwrap());
 
-    let lower_weight_sum = lower
-        .into_iter()
-        .fold(0.0, |accum, item| accum + item.weight);
-    let higher_weight_sum = higher
-        .into_iter()
-        .fold(0.0, |accum, item| accum + item.weight);
+    let lower_weight_sum = weight_sum(lower);
+    let higher_weight_sum = weight_sum(higher);
     let weight_sum = lower_weight_sum + pivot.weight + higher_weight_sum;
 
     if lower_weight_sum / weight_sum < 0.5 && higher_weight_sum / weight_sum < 0.5 {
