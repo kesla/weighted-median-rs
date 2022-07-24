@@ -38,20 +38,12 @@ pub fn weighted_median(input: &mut [Data]) -> f64 {
     }
 
     if lower_weight_sum / weight_sum >= 0.5 {
-        // if lower.len() == 1 {
-        //     return lower[0].value
-        // }
-        // return weighted_median(&mut .concat());
         input[pivot_index].weight = input[pivot_index].weight + higher_weight_sum;
         weighted_median(&mut input[..pivot_index + 1])
     } else {
-        // if higher.len() == 1 {
-        //     return higher[0].value
-        // }
         input[pivot_index].weight = input[pivot_index].weight + lower_weight_sum;
         weighted_median(&mut input[pivot_index..])
     }
-    // -1.0
 }
 
 #[cfg(test)]
