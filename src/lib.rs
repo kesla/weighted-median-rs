@@ -22,7 +22,7 @@ fn weighted_median_sorted(input: &mut [Data]) -> f64 {
         }
 
         if current_weight > half_sum {
-            return input[i].value
+            return input[i].value;
         }
 
         i = i + 1;
@@ -34,11 +34,11 @@ fn is_sorted(input: &mut [Data]) -> bool {
 
     input.into_iter().all(|data| {
         if data.value > prev_value {
-            return false
+            return false;
         }
 
         prev_value = data.value;
-        return true
+        return true;
     })
 }
 
@@ -211,73 +211,76 @@ mod tests {
 
     #[test]
     fn three_elements_is_even() {
-        let input = &mut [
-            Data {
-                value: 3.0,
-                weight: 2.0,
-            },
-            Data {
-                value: 2.0,
-                weight: 1.0,
-            },
-            Data {
-                value: 1.0,
-                weight: 1.0,
-            },
-        ];
-        let result = weighted_median(input);
-
-        assert_eq!(result, 2.5);
+        assert_eq!(
+            weighted_median(&mut [
+                Data {
+                    value: 3.0,
+                    weight: 2.0,
+                },
+                Data {
+                    value: 2.0,
+                    weight: 1.0,
+                },
+                Data {
+                    value: 1.0,
+                    weight: 1.0,
+                },
+            ]),
+            2.5
+        );
     }
 
     #[test]
     fn four_elements_is_even() {
-        let input = &mut [
-            Data {
-                value: 1.0,
-                weight: 0.49,
-            },
-            Data {
-                value: 2.0,
-                weight: 0.01,
-            },
-            Data {
-                value: 3.0,
-                weight: 0.25,
-            },
-            Data {
-                value: 1000.0,
-                weight: 0.25,
-            },
-        ];
-        let result = weighted_median(input);
-
-        assert_eq!(result, 2.5);
+        assert_eq!(
+            weighted_median(&mut [
+                Data {
+                    value: 1.0,
+                    weight: 0.49,
+                },
+                Data {
+                    value: 2.0,
+                    weight: 0.01,
+                },
+                Data {
+                    value: 3.0,
+                    weight: 0.25,
+                },
+                Data {
+                    value: 1000.0,
+                    weight: 0.25,
+                },
+            ]),
+            2.5
+        );
     }
 
     #[test]
     fn five_elements_is_pivot_value() {
-        assert_eq!(weighted_median( &mut [
-            Data {
-                value: 2.0,
-                weight: 0.5
-            },
-            Data {
-                value: 1.0,
-                weight: 0.5
-            },
-            Data {
-                value: 3.0,
-                weight: 1.0
-            },
-            Data {
-                value: 10.0,
-                weight: 0.8
-            },
-            Data {
-                value: 8.0,
-                weight: 0.2
-            }
-        ]), 3.0);
+        assert_eq!(
+            weighted_median(&mut [
+                Data {
+                    value: 2.0,
+                    weight: 0.5
+                },
+                Data {
+                    value: 1.0,
+                    weight: 0.5
+                },
+                Data {
+                    value: 3.0,
+                    weight: 1.0
+                },
+                Data {
+                    value: 10.0,
+                    weight: 0.8
+                },
+                Data {
+                    value: 8.0,
+                    weight: 0.2
+                }
+            ]),
+            3.0
+        );
     }
 }
