@@ -10,6 +10,38 @@ fn weight_sum(input: &mut [Data]) -> f64 {
         .fold(0.0, |accum, item| accum + item.weight);
 }
 
+fn weighted_median_sorted(input: &mut [Data]) -> f64 {
+    let half_sum: f64 = weight_sum(input) / 2.0;
+    let mut current_weight = 0.0;
+    let mut i = 0;
+    loop {
+        current_weight = current_weight + input[i].weight;
+
+        if current_weight == half_sum {
+            return (input[i].value + input[i + 1].value) / 2.0;
+        }
+
+        if current_weight > half_sum {
+            return input[i].value
+        }
+
+        i = i + 1;
+    }
+}
+
+fn is_sorted(input: &mut [Data]) -> bool {
+    let mut prev_value = input[0].value;
+
+    input.into_iter().all(|data| {
+        if data.value > prev_value {
+            return false
+        }
+
+        prev_value = data.value;
+        return true
+    })
+}
+
 pub fn weighted_median(input: &mut [Data]) -> f64 {
     let n = input.len();
 
@@ -27,6 +59,10 @@ pub fn weighted_median(input: &mut [Data]) -> f64 {
         }
     }
 
+    if is_sorted(input) {
+        return weighted_median_sorted(input);
+    }
+
     let pivot_index = input.len() / 2;
     let (lower, pivot, higher) =
         input.select_nth_unstable_by(pivot_index, |a, b| a.value.partial_cmp(&b.value).unwrap());
@@ -41,10 +77,10 @@ pub fn weighted_median(input: &mut [Data]) -> f64 {
 
     if lower_weight_sum / weight_sum >= 0.5 {
         input[pivot_index].weight = input[pivot_index].weight + higher_weight_sum;
-        weighted_median(&mut input[..pivot_index + 1])
+        return weighted_median(&mut input[..pivot_index + 1]);
     } else {
         input[pivot_index].weight = input[pivot_index].weight + lower_weight_sum;
-        weighted_median(&mut input[pivot_index..])
+        return weighted_median(&mut input[pivot_index..]);
     }
 }
 
