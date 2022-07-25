@@ -113,7 +113,20 @@ mod tests {
                 }
             ]),
             8.0
-        )
+        );
+        assert_eq!(
+            weighted_median(&mut [
+                Data {
+                    value: 8.0,
+                    weight: 2.0
+                },
+                Data {
+                    value: 7.0,
+                    weight: 1.0
+                },
+            ]),
+            8.0
+        );
     }
 
     #[test]
@@ -240,5 +253,31 @@ mod tests {
         let result = weighted_median(input);
 
         assert_eq!(result, 2.5);
+    }
+
+    #[test]
+    fn five_elements_is_pivot_value() {
+        assert_eq!(weighted_median( &mut [
+            Data {
+                value: 2.0,
+                weight: 0.5
+            },
+            Data {
+                value: 1.0,
+                weight: 0.5
+            },
+            Data {
+                value: 3.0,
+                weight: 1.0
+            },
+            Data {
+                value: 10.0,
+                weight: 0.8
+            },
+            Data {
+                value: 8.0,
+                weight: 0.2
+            }
+        ]), 3.0);
     }
 }
