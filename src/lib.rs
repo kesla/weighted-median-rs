@@ -32,19 +32,18 @@ impl<'slice> WeightedMedian<'slice> {
 
     fn calculate_sorted(self) -> f64 {
         let sum: f64 = weight_sum(self.data, self.lower_weight_delta, self.higher_weight_delta);
-        let mut current_weight = self.lower_weight_delta + self.data[0].weight;
-        let mut i = 0;
+        let mut current_weight = self.lower_weight_delta;
+        let mut iterator = self.data.iter();
+
         loop {
+            let row = iterator.next().unwrap();
+            current_weight = current_weight + row.weight;
+
             if current_weight / sum == 0.5 {
-                return (self.data[i].value + self.data[i + 1].value) / 2.0;
+                break (row.value + iterator.next().unwrap().value) / 2.0;
+            } else if current_weight / sum > 0.5 {
+                break row.value;
             }
-
-            if current_weight / sum > 0.5 {
-                return self.data[i].value;
-            }
-
-            i = i + 1;
-            current_weight = current_weight + self.data[i].weight;
         }
     }
 
