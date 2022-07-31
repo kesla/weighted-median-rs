@@ -58,23 +58,21 @@ impl<'slice> WeightedMedian<'slice> {
         let weight_sum = lower_weight_sum + pivot.weight + higher_weight_sum;
 
         if lower_weight_sum / weight_sum < 0.5 && higher_weight_sum / weight_sum < 0.5 {
-            return pivot.value;
-        }
-
-        if lower_weight_sum / weight_sum >= 0.5 {
-            return WeightedMedian::new(
+            pivot.value
+        } else if lower_weight_sum / weight_sum >= 0.5 {
+            WeightedMedian::new(
                 &mut self.data[..pivot_index + 1],
                 self.lower_weight_delta,
                 higher_weight_sum,
             )
-            .calculate();
+            .calculate()
         } else {
-            return WeightedMedian::new(
+            WeightedMedian::new(
                 &mut self.data[pivot_index..],
                 lower_weight_sum,
                 self.higher_weight_delta,
             )
-            .calculate();
+            .calculate()
         }
     }
 
