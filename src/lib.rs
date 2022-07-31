@@ -1,13 +1,13 @@
-use num_traits::Num;
+use num_traits::{Float, Num};
 use std::fmt::Debug;
 
 #[derive(Debug, PartialEq)]
-pub struct Data<W> {
-    pub value: f64,
+pub struct Data<V, W> {
+    pub value: V,
     pub weight: W,
 }
 
-fn weight_sum<W>(input: &mut [Data<W>]) -> W
+fn weight_sum<V, W>(input: &mut [Data<V, W>]) -> W
 where
     W: Num + PartialOrd + Debug + Copy,
 {
@@ -16,8 +16,9 @@ where
         .fold(W::zero(), |accum, item| accum + item.weight)
 }
 
-fn weighted_median_sorted<W>(input: &mut [Data<W>]) -> f64
+fn weighted_median_sorted<V, W>(input: &mut [Data<V, W>]) -> V
 where
+    V: Float,
     W: Num + PartialOrd + Debug + Copy,
 {
     let sum: W = weight_sum(input);
@@ -26,7 +27,7 @@ where
     loop {
         println!("{:?}, {:?}", current_weight, sum);
         if current_weight + current_weight == sum {
-            return (input[i].value + input[i + 1].value) / 2.0;
+            return (input[i].value + input[i + 1].value) / V::from(2).unwrap();
         }
 
         if current_weight + current_weight > sum {
@@ -38,7 +39,10 @@ where
     }
 }
 
-fn is_sorted<W>(input: &mut [Data<W>]) -> bool {
+fn is_sorted<V, W>(input: &mut [Data<V, W>]) -> bool
+where
+    V: Float,
+{
     let mut prev_value = input[0].value;
 
     input.into_iter().all(|data| {
@@ -51,8 +55,9 @@ fn is_sorted<W>(input: &mut [Data<W>]) -> bool {
     })
 }
 
-pub fn weighted_median<W>(input: &mut [Data<W>]) -> f64
+pub fn weighted_median<V, W>(input: &mut [Data<V, W>]) -> V
 where
+    V: Float,
     W: Num + PartialOrd + Debug + Copy,
 {
     let n = input.len();
@@ -63,7 +68,7 @@ where
 
     if n == 2 {
         if input[0].weight == input[1].weight {
-            return (input[0].value + input[1].value) / 2.0;
+            return (input[0].value + input[1].value) / V::from(2).unwrap();
         } else if input[0].weight > input[1].weight {
             return input[0].value;
         } else {
@@ -77,7 +82,8 @@ where
 
     let pivot_index = input.len() / 2;
     let (lower, pivot, higher) =
-        input.select_nth_unstable_by(pivot_index, |a, b| a.value.partial_cmp(&b.value).unwrap());
+        input.select_nth_unstable_by(pivot_index, |a, b|
+            a.value.partial_cmp(&b.value).unwrap());
 
     let lower_weight_sum = weight_sum(lower);
     let higher_weight_sum = weight_sum(higher);
@@ -163,6 +169,27 @@ mod tests {
     }
 
     #[test]
+    fn three_elements_is_first_element() {
+        assert_eq!(
+            weighted_median(&mut [
+                Data {
+                    value: 2.0,
+                    weight: 1.0
+                },
+                Data {
+                    value: 3.0,
+                    weight: 1.0
+                },
+                Data {
+                    value: 1.0,
+                    weight: 1.0
+                },
+            ]),
+            2.0
+        )
+    }
+
+    #[test]
     fn three_elements_is_middle_element() {
         assert_eq!(
             weighted_median(&mut [
@@ -176,6 +203,27 @@ mod tests {
                 },
                 Data {
                     value: 1.0,
+                    weight: 1.0
+                },
+            ]),
+            2.0
+        )
+    }
+
+    #[test]
+    fn three_elements_is_last_element() {
+        assert_eq!(
+            weighted_median(&mut [
+                Data {
+                    value: 3.0,
+                    weight: 1.0
+                },
+                Data {
+                    value: 1.0,
+                    weight: 1.0
+                },
+                Data {
+                    value: 2.0,
                     weight: 1.0
                 },
             ]),
@@ -301,13 +349,14 @@ mod tests {
     }
 
     #[test]
-    fn weight_is_integer() {
+    fn weight_is_integer_and_value_is_f32() {
         assert_eq!(
             weighted_median(&mut [Data {
-                value: 1.0,
+                value: 1.0__f32,
                 weight: 1
             }]),
             1.0
         );
     }
+
 }
