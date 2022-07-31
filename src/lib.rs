@@ -7,35 +7,37 @@ pub struct Data<V, W> {
     pub weight: W,
 }
 
-fn weight_sum<V, W>(input: &mut [Data<V, W>]) -> W
+fn weight_sum<T, W, WF>(input: &mut [T], weightFn: WF) -> W
 where
     W: Num + PartialOrd + Debug + Copy,
+    WF: Fn(&mut T) -> W,
 {
     input
         .into_iter()
-        .fold(W::zero(), |accum, item| accum + item.weight)
+        .fold(W::zero(), |accum, item| accum + weightFn(item))
 }
 
-fn weighted_median_sorted<V, W>(input: &mut [Data<V, W>]) -> V
+fn weighted_median_sorted<T, V, W, WF, VF>(input: &mut [T], weightFn: WF, valueFn: VF) -> V
 where
     V: Float,
     W: Num + PartialOrd + Debug + Copy,
+    WF: Fn(&mut T) -> W + Copy,
+    VF: Fn(&mut T) -> V,
 {
-    let sum: W = weight_sum(input);
-    let mut current_weight = input[0].weight;
+    let sum: W = weight_sum(input, weightFn);
+    let mut current_weight = weightFn(&mut input[0]);
     let mut i = 0;
     loop {
-        println!("{:?}, {:?}", current_weight, sum);
         if current_weight + current_weight == sum {
-            return (input[i].value + input[i + 1].value) / V::from(2).unwrap();
+            return (valueFn(&mut input[i]) + valueFn(&mut input[i + 1])) / V::from(2).unwrap();
         }
 
         if current_weight + current_weight > sum {
-            return input[i].value;
+            return valueFn(&mut input[i]);
         }
 
         i = i + 1;
-        current_weight = current_weight + input[i].weight;
+        current_weight = current_weight + weightFn(&mut input[i]);
     }
 }
 
@@ -77,16 +79,15 @@ where
     }
 
     if is_sorted(input) {
-        return weighted_median_sorted(input);
+        return weighted_median_sorted(input, |item| item.weight, |item| item.value);
     }
 
     let pivot_index = input.len() / 2;
     let (lower, pivot, higher) =
-        input.select_nth_unstable_by(pivot_index, |a, b|
-            a.value.partial_cmp(&b.value).unwrap());
+        input.select_nth_unstable_by(pivot_index, |a, b| a.value.partial_cmp(&b.value).unwrap());
 
-    let lower_weight_sum = weight_sum(lower);
-    let higher_weight_sum = weight_sum(higher);
+    let lower_weight_sum = weight_sum(lower, |item| item.weight);
+    let higher_weight_sum = weight_sum(higher, |item| item.weight);
     let weight_sum = lower_weight_sum + pivot.weight + higher_weight_sum;
 
     // write it like this to avoid comparison w 0.5 (like lower_weight_um / weight_sum < 0.5)
@@ -358,5 +359,4 @@ mod tests {
             1.0
         );
     }
-
 }
