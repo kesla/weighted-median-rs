@@ -7,29 +7,18 @@ pub struct Data<W> {
     pub weight: W,
 }
 
-pub trait WeightType: Num + PartialOrd + Debug + Copy {}
-
-impl WeightType for f64 {}
-impl WeightType for f32 {}
-impl WeightType for i32 {}
-impl WeightType for i64 {}
-impl WeightType for usize {}
-
-
 fn weight_sum<W>(input: &mut [Data<W>]) -> W
 where
-    W: WeightType,
+    W: Num + PartialOrd + Debug + Copy,
 {
-    return input
+    input
         .into_iter()
-        .map(|d| d.weight)
-        .reduce(|accum, item| accum + item)
-        .unwrap();
+        .fold(W::zero(), |accum, item| accum + item.weight)
 }
 
 fn weighted_median_sorted<W>(input: &mut [Data<W>]) -> f64
 where
-    W: WeightType,
+    W: Num + PartialOrd + Debug + Copy,
 {
     let sum: W = weight_sum(input);
     let mut current_weight = input[0].weight;
@@ -37,11 +26,9 @@ where
     loop {
         println!("{:?}, {:?}", current_weight, sum);
         if current_weight + current_weight == sum {
-            // return -1.0
             return (input[i].value + input[i + 1].value) / 2.0;
         }
 
-        // avoid / 2: current.weight > (sum/2)
         if current_weight + current_weight > sum {
             return input[i].value;
         }
@@ -66,7 +53,7 @@ fn is_sorted<W>(input: &mut [Data<W>]) -> bool {
 
 pub fn weighted_median<W>(input: &mut [Data<W>]) -> f64
 where
-    W: WeightType,
+    W: Num + PartialOrd + Debug + Copy,
 {
     let n = input.len();
 
