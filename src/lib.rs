@@ -1,3 +1,4 @@
+use is_sorted::IsSorted;
 use std::fmt::Debug;
 
 #[derive(Debug, PartialEq)]
@@ -14,91 +15,95 @@ fn weight_sum(input: &mut [Data], lower_weight_delta: f64, higher_weight_delta: 
         })
 }
 
-fn weighted_median_sorted(
-    input: &mut [Data],
+struct WeightedMedian<'slice> {
+    data: &'slice mut [Data],
     lower_weight_delta: f64,
     higher_weight_delta: f64,
-) -> f64 {
-    let sum: f64 = weight_sum(input, lower_weight_delta, higher_weight_delta);
-    let mut current_weight = lower_weight_delta + input[0].weight;
-    let mut i = 0;
-    loop {
-        if current_weight / sum == 0.5 {
-            return (input[i].value + input[i + 1].value) / 2.0;
-        }
-
-        if current_weight / sum > 0.5 {
-            return input[i].value;
-        }
-
-        i = i + 1;
-        current_weight = current_weight + input[i].weight;
-    }
 }
 
-fn is_sorted(input: &mut [Data]) -> bool {
-    let mut prev_value = input[0].value;
-
-    input[1..].into_iter().all(|data| {
-        if data.value > prev_value {
-            return false;
-        }
-
-        prev_value = data.value;
-        return true;
-    })
-}
-
-fn _weighted_median(input: &mut [Data], lower_weight_delta: f64, higher_weight_delta: f64) -> f64 {
-    let n = input.len();
-
-    if n == 1 {
-        return input[0].value;
-    }
-
-    if n == 2 {
-        if lower_weight_delta + input[0].weight == input[1].weight + higher_weight_delta {
-            return (input[0].value + input[1].value) / 2.0;
-        } else if input[0].weight > input[1].weight {
-            return input[0].value;
-        } else {
-            return input[1].value;
-        }
-    }
-
-    if is_sorted(input) {
-        return weighted_median_sorted(input, lower_weight_delta, higher_weight_delta);
-    }
-
-    let pivot_index = input.len() / 2;
-    let (lower, pivot, higher) =
-        input.select_nth_unstable_by(pivot_index, |a, b| a.value.partial_cmp(&b.value).unwrap());
-
-    let lower_weight_sum = weight_sum(lower, lower_weight_delta, 0.0);
-    let higher_weight_sum = weight_sum(higher, 0.0, higher_weight_delta);
-    let weight_sum = lower_weight_sum + pivot.weight + higher_weight_sum;
-
-    if lower_weight_sum / weight_sum < 0.5 && higher_weight_sum / weight_sum < 0.5 {
-        return pivot.value;
-    }
-
-    if lower_weight_sum / weight_sum >= 0.5 {
-        return _weighted_median(
-            &mut input[..pivot_index + 1],
+impl<'slice> WeightedMedian<'slice> {
+    fn new(data: &'slice mut [Data], lower_weight_delta: f64, higher_weight_delta: f64) -> Self {
+        Self {
+            data,
             lower_weight_delta,
-            higher_weight_delta + higher_weight_sum,
-        );
-    } else {
-        return _weighted_median(
-            &mut input[pivot_index..],
-            lower_weight_delta + lower_weight_sum,
             higher_weight_delta,
-        );
+        }
+    }
+
+    fn calculate_sorted(self) -> f64 {
+        let sum: f64 = weight_sum(self.data, self.lower_weight_delta, self.higher_weight_delta);
+        let mut current_weight = self.lower_weight_delta + self.data[0].weight;
+        let mut i = 0;
+        loop {
+            if current_weight / sum == 0.5 {
+                return (self.data[i].value + self.data[i + 1].value) / 2.0;
+            }
+
+            if current_weight / sum > 0.5 {
+                return self.data[i].value;
+            }
+
+            i = i + 1;
+            current_weight = current_weight + self.data[i].weight;
+        }
+    }
+
+    fn calculate_not_sorted(self) -> f64 {
+        let pivot_index = self.data.len() / 2;
+        let (lower, pivot, higher) = self
+            .data
+            .select_nth_unstable_by(pivot_index, |a, b| a.value.partial_cmp(&b.value).unwrap());
+
+        let lower_weight_sum = weight_sum(lower, self.lower_weight_delta, 0.0);
+        let higher_weight_sum = weight_sum(higher, 0.0, self.higher_weight_delta);
+        let weight_sum = lower_weight_sum + pivot.weight + higher_weight_sum;
+
+        if lower_weight_sum / weight_sum < 0.5 && higher_weight_sum / weight_sum < 0.5 {
+            return pivot.value;
+        }
+
+        if lower_weight_sum / weight_sum >= 0.5 {
+            return WeightedMedian::new(
+                &mut self.data[..pivot_index + 1],
+                self.lower_weight_delta,
+                higher_weight_sum,
+            )
+            .calculate();
+        } else {
+            return WeightedMedian::new(
+                &mut self.data[pivot_index..],
+                lower_weight_sum,
+                self.higher_weight_delta,
+            )
+            .calculate();
+        }
+    }
+
+    fn calculate(self) -> f64 {
+        let n = self.data.len();
+
+        if n == 1 {
+            self.data[0].value
+        } else if n == 2 {
+            if self.lower_weight_delta + self.data[0].weight
+                == self.data[1].weight + self.higher_weight_delta
+            {
+                (self.data[0].value + self.data[1].value) / 2.0
+            } else if self.data[0].weight > self.data[1].weight {
+                self.data[0].value
+            } else {
+                self.data[1].value
+            }
+        } else if IsSorted::is_sorted_by_key(&mut self.data.into_iter(), |data| data.value) {
+            self.calculate_sorted()
+        } else {
+            self.calculate_not_sorted()
+        }
     }
 }
 
 pub fn weighted_median(input: &mut [Data]) -> f64 {
-    _weighted_median(input, 0.0, 0.0)
+    WeightedMedian::new(input, 0.0, 0.0).calculate()
 }
 
 #[cfg(test)]
@@ -361,12 +366,12 @@ mod tests {
     }
 
     mod sorted {
-        use crate::{weighted_median_sorted, Data};
+        use crate::{Data, WeightedMedian};
 
         #[test]
         fn with_lower_and_higher_delta() {
             assert_eq!(
-                weighted_median_sorted(
+                WeightedMedian::new(
                     &mut [
                         Data {
                             value: 1.0,
@@ -379,12 +384,13 @@ mod tests {
                     ],
                     1.0,
                     0.0
-                ),
+                )
+                .calculate_sorted(),
                 1.5
             );
 
             assert_eq!(
-                weighted_median_sorted(
+                WeightedMedian::new(
                     &mut [
                         Data {
                             value: 1.0,
@@ -397,7 +403,8 @@ mod tests {
                     ],
                     0.0,
                     1.0
-                ),
+                )
+                .calculate_sorted(),
                 1.5
             )
         }
