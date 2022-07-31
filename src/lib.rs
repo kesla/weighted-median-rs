@@ -35,9 +35,8 @@ where
     V: Float,
     W: Num + PartialOrd + Debug + Copy,
 {
-
     let sum: W = weight_sum(input, lower_weight_delta, higher_weight_delta);
-    let mut current_weight = input[0].weight;
+    let mut current_weight = lower_weight_delta + input[0].weight;
     let mut i = 0;
     loop {
         if current_weight + current_weight == sum {
@@ -405,5 +404,49 @@ mod tests {
             }]),
             1.0
         );
+    }
+
+    mod sorted {
+        use crate::{weighted_median_sorted, Data};
+
+        #[test]
+        fn with_lower_and_higher_delta() {
+            assert_eq!(
+                weighted_median_sorted(
+                    &mut [
+                        Data {
+                            value: 1.0,
+                            weight: 1
+                        },
+                        Data {
+                            value: 2.0,
+                            weight: 2
+                        }
+                    ],
+                    1,
+                    0
+                ),
+                1.5
+            );
+
+            assert_eq!(
+                weighted_median_sorted(
+                    &mut [
+                        Data {
+                            value: 1.0,
+                            weight: 2
+                        },
+                        Data {
+                            value: 2.0,
+                            weight: 1
+                        }
+                    ],
+                    0,
+                    1
+                ),
+                1.5
+            )
+
+        }
     }
 }
