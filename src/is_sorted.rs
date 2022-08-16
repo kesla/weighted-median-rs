@@ -1,22 +1,40 @@
-pub fn is_sorted<T: crate::Data>(data: &mut [T]) -> bool {
+#[derive(PartialEq, Debug)]
+pub enum SortOrder {
+    Forward,
+    Backward,
+    NotSorted,
+}
+
+pub fn is_sorted<T: crate::Data>(data: &mut [T]) -> SortOrder {
     let mut iter = data.into_iter().peekable();
+    // forward, backward
+    let mut status = (true, true);
 
     while let Some(current) = iter.next() {
         if let Some(next) = iter.peek() {
-            if next.get_value() < current.get_value() {
-                return false;
+            status.0 = status.0 && next.get_value() < current.get_value();
+            status.1 = status.1 && next.get_value() > current.get_value();
+
+            if !status.0 && !status.1 {
+                break;
             }
         }
     }
 
-    true
+    if status.0 {
+        SortOrder::Forward
+    } else if status.1 {
+        SortOrder::Backward
+    } else {
+        SortOrder::NotSorted
+    }
 }
 
 #[cfg(test)]
 mod test {
 
     use super::is_sorted;
-    use crate::Data;
+    use crate::{is_sorted::SortOrder, Data};
 
     struct TestData {
         value: f64,
@@ -33,14 +51,25 @@ mod test {
     }
 
     #[test]
-    fn data_is_sorted() {
+    fn data_is_forward_sorted() {
         let mut input = [
             TestData { value: 1.0 },
             TestData { value: 2.0 },
             TestData { value: 3.0 },
         ];
 
-        assert_eq!(is_sorted(&mut input), true);
+        assert_eq!(is_sorted(&mut input), SortOrder::Forward);
+    }
+
+    #[test]
+    fn data_is_backward_sorted() {
+        let mut input = [
+            TestData { value: 1.0 },
+            TestData { value: 3.0 },
+            TestData { value: 2.0 },
+        ];
+
+        assert_eq!(is_sorted(&mut input), SortOrder::Backward);
     }
 
     #[test]
@@ -51,6 +80,6 @@ mod test {
             TestData { value: 2.0 },
         ];
 
-        assert_eq!(is_sorted(&mut input), false);
+        assert_eq!(is_sorted(&mut input), SortOrder::NotSorted);
     }
 }

@@ -1,7 +1,7 @@
 mod partition;
 use partition::partition;
 mod is_sorted;
-use is_sorted::is_sorted;
+use is_sorted::{is_sorted, SortOrder};
 
 pub trait Data {
     fn get_value(&self) -> f64;
@@ -78,24 +78,23 @@ impl<'slice, T: Data> WeightedMedian<'slice, T> {
     }
 
     fn calculate(mut self) -> f64 {
-        let n = self.data.len();
-
-        if n == 1 {
-            self.data[0].get_value()
-        } else if n == 2 {
-            if self.lower_weight_delta + self.data[0].get_weight()
-                == self.data[1].get_weight() + self.higher_weight_delta
-            {
-                (self.data[0].get_value() + self.data[1].get_value()) / 2.0
-            } else if self.data[0].get_weight() > self.data[1].get_weight() {
-                self.data[0].get_value()
-            } else {
-                self.data[1].get_value()
+        match self.data.len() {
+            1 => self.data[0].get_value(),
+            2 => {
+                let lower = self.lower_weight_delta + self.data[0].get_weight();
+                let higher = self.data[1].get_weight() + self.higher_weight_delta;
+                if lower == higher {
+                    (self.data[0].get_value() + self.data[1].get_value()) / 2.0
+                } else if lower > higher {
+                    self.data[0].get_value()
+                } else {
+                    self.data[1].get_value()
+                }
             }
-        } else if is_sorted(&mut self.data) {
-            self.calculate_sorted()
-        } else {
-            self.calculate_not_sorted()
+            _ => match is_sorted(&mut self.data) {
+                SortOrder::Forward | SortOrder::Backward => self.calculate_sorted(),
+                SortOrder::NotSorted => self.calculate_not_sorted(),
+            },
         }
     }
 }
