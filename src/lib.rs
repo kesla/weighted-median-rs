@@ -1,4 +1,5 @@
 use is_sorted::IsSorted;
+mod partition;
 
 pub trait Data {
     fn get_value(&self) -> f64;
@@ -34,29 +35,35 @@ impl<'slice, T: Data> WeightedMedian<'slice, T> {
         let mut iterator = self.data.iter();
 
         loop {
-            let row = iterator.next().unwrap();
-            current_weight = current_weight + row.get_weight();
+            match iterator.next() {
+                Some(row) => {
+                    current_weight = current_weight + row.get_weight();
 
-            if current_weight / sum == 0.5 {
-                break (row.get_value() + iterator.next().unwrap().get_value()) / 2.0;
-            } else if current_weight / sum > 0.5 {
-                break row.get_value();
+                    if current_weight / sum == 0.5 {
+                        break (row.get_value() + iterator.next().unwrap().get_value()) / 2.0;
+                    } else if current_weight / sum > 0.5 {
+                        break row.get_value();
+                    }
+                }
+                None => panic!(),
             }
         }
     }
 
     fn calculate_not_sorted(self) -> f64 {
-        let pivot_index = self.data.len() / 2;
-        let (lower, pivot, higher) = self.data.select_nth_unstable_by(pivot_index, |a, b| {
-            a.get_value().partial_cmp(&b.get_value()).unwrap()
-        });
+        let pivot_index = partition::partition(self.data);
 
-        let lower_weight_sum = weight_sum(lower, self.lower_weight_delta, 0.0);
-        let higher_weight_sum = weight_sum(higher, 0.0, self.higher_weight_delta);
-        let weight_sum = lower_weight_sum + pivot.get_weight() + higher_weight_sum;
+        let lower_weight_sum =
+            weight_sum(&mut self.data[..pivot_index], self.lower_weight_delta, 0.0);
+        let higher_weight_sum = weight_sum(
+            &mut self.data[pivot_index + 1..],
+            0.0,
+            self.higher_weight_delta,
+        );
+        let weight_sum = lower_weight_sum + self.data[pivot_index].get_weight() + higher_weight_sum;
 
         if lower_weight_sum / weight_sum < 0.5 && higher_weight_sum / weight_sum < 0.5 {
-            pivot.get_value()
+            self.data[pivot_index].get_value()
         } else if lower_weight_sum / weight_sum >= 0.5 {
             WeightedMedian::new(
                 &mut self.data[..pivot_index + 1],
