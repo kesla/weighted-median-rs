@@ -1,5 +1,7 @@
-use is_sorted::IsSorted;
 mod partition;
+use partition::partition;
+mod is_sorted;
+use is_sorted::is_sorted;
 
 pub trait Data {
     fn get_value(&self) -> f64;
@@ -49,7 +51,7 @@ impl<'slice, T: Data> WeightedMedian<'slice, T> {
     }
 
     fn calculate_not_sorted(self) -> f64 {
-        let pivot_index = partition::partition(self.data);
+        let pivot_index = partition(self.data);
 
         let lower_weight_sum = self.lower_weight_delta + weight_sum(&mut self.data[..pivot_index]);
         let higher_weight_sum =
@@ -75,7 +77,7 @@ impl<'slice, T: Data> WeightedMedian<'slice, T> {
         }
     }
 
-    fn calculate(self) -> f64 {
+    fn calculate(mut self) -> f64 {
         let n = self.data.len();
 
         if n == 1 {
@@ -90,7 +92,7 @@ impl<'slice, T: Data> WeightedMedian<'slice, T> {
             } else {
                 self.data[1].get_value()
             }
-        } else if IsSorted::is_sorted_by_key(&mut self.data.into_iter(), |data| data.get_value()) {
+        } else if is_sorted(&mut self.data) {
             self.calculate_sorted()
         } else {
             self.calculate_not_sorted()

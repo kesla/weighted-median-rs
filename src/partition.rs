@@ -35,7 +35,6 @@ mod tests {
     use super::partition;
     use crate::Data;
 
-    #[derive(Debug, PartialEq)]
     struct TestData {
         value: f64,
     }
