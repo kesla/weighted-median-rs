@@ -6,12 +6,10 @@ pub trait Data {
     fn get_weight(&self) -> f64;
 }
 
-fn weight_sum<T: Data>(input: &mut [T], lower_weight_delta: f64, higher_weight_delta: f64) -> f64 {
+fn weight_sum<T: Data>(input: &mut [T]) -> f64 {
     input
         .into_iter()
-        .fold(lower_weight_delta + higher_weight_delta, |accum, item| {
-            accum + item.get_weight()
-        })
+        .fold(0.0, |accum, item| accum + item.get_weight())
 }
 
 struct WeightedMedian<'slice, T: Data> {
@@ -30,7 +28,7 @@ impl<'slice, T: Data> WeightedMedian<'slice, T> {
     }
 
     fn calculate_sorted(self) -> f64 {
-        let sum: f64 = weight_sum(self.data, self.lower_weight_delta, self.higher_weight_delta);
+        let sum: f64 = self.lower_weight_delta + self.higher_weight_delta + weight_sum(self.data);
         let mut current_weight = self.lower_weight_delta;
         let mut iterator = self.data.iter();
 
@@ -53,13 +51,9 @@ impl<'slice, T: Data> WeightedMedian<'slice, T> {
     fn calculate_not_sorted(self) -> f64 {
         let pivot_index = partition::partition(self.data);
 
-        let lower_weight_sum =
-            weight_sum(&mut self.data[..pivot_index], self.lower_weight_delta, 0.0);
-        let higher_weight_sum = weight_sum(
-            &mut self.data[pivot_index + 1..],
-            0.0,
-            self.higher_weight_delta,
-        );
+        let lower_weight_sum = self.lower_weight_delta + weight_sum(&mut self.data[..pivot_index]);
+        let higher_weight_sum =
+            self.higher_weight_delta + weight_sum(&mut self.data[pivot_index + 1..]);
         let weight_sum = lower_weight_sum + self.data[pivot_index].get_weight() + higher_weight_sum;
 
         if lower_weight_sum / weight_sum < 0.5 && higher_weight_sum / weight_sum < 0.5 {
