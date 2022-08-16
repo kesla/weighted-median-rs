@@ -12,8 +12,8 @@ pub fn is_sorted<T: crate::Data>(data: &mut [T]) -> SortOrder {
 
     while let Some(current) = iter.next() {
         if let Some(next) = iter.peek() {
-            status.0 = status.0 && next.get_value() < current.get_value();
-            status.1 = status.1 && next.get_value() > current.get_value();
+            status.0 = status.0 && current.get_value() < next.get_value();
+            status.1 = status.1 && current.get_value() > next.get_value();
 
             if !status.0 && !status.1 {
                 break;
@@ -64,9 +64,9 @@ mod test {
     #[test]
     fn data_is_backward_sorted() {
         let mut input = [
-            TestData { value: 1.0 },
             TestData { value: 3.0 },
             TestData { value: 2.0 },
+            TestData { value: 1.0 },
         ];
 
         assert_eq!(is_sorted(&mut input), SortOrder::Backward);
