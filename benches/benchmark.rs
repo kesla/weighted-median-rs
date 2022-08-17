@@ -21,8 +21,8 @@ fn generate_test_data<F: Fn(usize) -> (usize, usize)>(func: F) -> Vec<TestData> 
     for count in 0..100 {
         let (weight, value) = func(count);
         data.push(TestData {
-            weight: weight as f64,
-            value: value as f64,
+          weight: weight as f64,
+          value: value as f64
         });
     }
     data
@@ -37,8 +37,9 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     });
 
     c.bench_function("weighted_median - sorted", |b| {
-        b.iter(|| weighted_median(black_box(sorted_test_data)))
-    });
+      b.iter(|| weighted_median(black_box(sorted_test_data)))
+  });
+
 }
 
 criterion_group!(benches, criterion_benchmark);
