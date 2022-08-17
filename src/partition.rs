@@ -1,3 +1,5 @@
+
+#[inline]
 pub fn partition<T: crate::Data>(data: &mut [T]) -> usize {
     data.swap(data.len() / 2, 0);
 

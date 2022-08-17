@@ -5,6 +5,7 @@ pub enum SortOrder {
     NotSorted,
 }
 
+#[inline]
 pub fn is_sorted<T: crate::Data>(data: &mut [T]) -> SortOrder {
     let mut iter = data.into_iter().peekable();
     // forward, backward

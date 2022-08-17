@@ -8,6 +8,7 @@ pub trait Data {
     fn get_weight(&self) -> f64;
 }
 
+#[inline]
 fn weight_sum<T: Data>(input: &mut [T]) -> f64 {
     input
         .into_iter()
@@ -32,22 +33,19 @@ impl<'slice, T: Data> WeightedMedian<'slice, T> {
     fn calculate_sorted(self) -> f64 {
         let sum: f64 = self.lower_weight_delta + self.higher_weight_delta + weight_sum(self.data);
         let mut current_weight = self.lower_weight_delta;
-        let mut iterator = self.data.iter();
+        let mut iterator = self.data.into_iter().peekable();
 
-        loop {
-            match iterator.next() {
-                Some(row) => {
-                    current_weight = current_weight + row.get_weight();
+        while let Some(row) = iterator.next() {
+            current_weight = current_weight + row.get_weight();
 
-                    if current_weight / sum == 0.5 {
-                        break (row.get_value() + iterator.next().unwrap().get_value()) / 2.0;
-                    } else if current_weight / sum > 0.5 {
-                        break row.get_value();
-                    }
-                }
-                None => panic!(),
+            if current_weight / sum == 0.5 {
+                return (row.get_value() + iterator.peek().unwrap().get_value()) / 2.0;
+            } else if current_weight / sum > 0.5 {
+                return row.get_value();
             }
         }
+
+        panic!();
     }
 
     fn calculate_not_sorted(self) -> f64 {
