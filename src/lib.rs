@@ -1,7 +1,5 @@
 mod partition;
 use partition::partition;
-mod is_sorted;
-use is_sorted::{is_sorted, SortOrder};
 
 pub trait Data {
     fn get_value(&self) -> f64;
@@ -13,56 +11,6 @@ fn weight_sum<T: Data>(input: &mut [T]) -> f64 {
     input
         .into_iter()
         .fold(0.0, |accum, item| accum + item.get_weight())
-}
-
-fn calculate_sorted<T: Data>(
-    data: &mut [T],
-    lower_weight_delta: f64,
-    higher_weight_delta: f64,
-) -> f64 {
-    let sum: f64 = lower_weight_delta + higher_weight_delta + weight_sum(data);
-    let mut current_weight = lower_weight_delta;
-    let mut iterator = data.into_iter().peekable();
-
-    while let Some(row) = iterator.next() {
-        current_weight = current_weight + row.get_weight();
-
-        if current_weight / sum == 0.5 {
-            return (row.get_value() + iterator.peek().unwrap().get_value()) / 2.0;
-        } else if current_weight / sum > 0.5 {
-            return row.get_value();
-        }
-    }
-
-    panic!();
-}
-
-fn calculate_not_sorted<T: Data>(
-    data: &mut [T],
-    lower_weight_delta: f64,
-    higher_weight_delta: f64,
-) -> f64 {
-    let pivot_index = partition(data);
-
-    let lower_weight_sum = lower_weight_delta + weight_sum(&mut data[..pivot_index]);
-    let higher_weight_sum = higher_weight_delta + weight_sum(&mut data[pivot_index + 1..]);
-    let weight_sum = lower_weight_sum + data[pivot_index].get_weight() + higher_weight_sum;
-
-    if lower_weight_sum / weight_sum < 0.5 && higher_weight_sum / weight_sum < 0.5 {
-        data[pivot_index].get_value()
-    } else if lower_weight_sum / weight_sum >= 0.5 {
-        calculate(
-            &mut data[..pivot_index + 1],
-            lower_weight_delta,
-            higher_weight_sum,
-        )
-    } else {
-        calculate(
-            &mut data[pivot_index..],
-            lower_weight_sum,
-            higher_weight_delta,
-        )
-    }
 }
 
 pub fn calculate<T: Data>(
@@ -83,14 +31,29 @@ pub fn calculate<T: Data>(
                 data[1].get_value()
             }
         }
-        _ => match is_sorted(data) {
-            SortOrder::Forward | SortOrder::Backward => {
-                calculate_sorted(data, lower_weight_delta, higher_weight_delta)
+        _ => {
+            let pivot_index = partition(data);
+
+            let lower_weight_sum = lower_weight_delta + weight_sum(&mut data[..pivot_index]);
+            let higher_weight_sum = higher_weight_delta + weight_sum(&mut data[pivot_index + 1..]);
+            let weight_sum = lower_weight_sum + data[pivot_index].get_weight() + higher_weight_sum;
+
+            if lower_weight_sum / weight_sum < 0.5 && higher_weight_sum / weight_sum < 0.5 {
+                data[pivot_index].get_value()
+            } else if lower_weight_sum / weight_sum >= 0.5 {
+                calculate(
+                    &mut data[..pivot_index + 1],
+                    lower_weight_delta,
+                    higher_weight_sum,
+                )
+            } else {
+                calculate(
+                    &mut data[pivot_index..],
+                    lower_weight_sum,
+                    higher_weight_delta,
+                )
             }
-            SortOrder::NotSorted => {
-                calculate_not_sorted(data, lower_weight_delta, higher_weight_delta)
-            }
-        },
+        }
     }
 }
 
@@ -391,48 +354,5 @@ mod tests {
             weighted_median(&mut [CustomTestData(1.0, 1.0), CustomTestData(2.0, 1.0)]),
             1.5
         );
-    }
-
-    mod sorted {
-        use crate::{calculate_sorted, tests::TestData};
-
-        #[test]
-        fn with_lower_and_higher_delta() {
-            assert_eq!(
-                calculate_sorted(
-                    &mut [
-                        TestData {
-                            value: 1.0,
-                            weight: 1.0
-                        },
-                        TestData {
-                            value: 2.0,
-                            weight: 2.0
-                        }
-                    ],
-                    1.0,
-                    0.0
-                ),
-                1.5
-            );
-
-            assert_eq!(
-                calculate_sorted(
-                    &mut [
-                        TestData {
-                            value: 1.0,
-                            weight: 2.0
-                        },
-                        TestData {
-                            value: 2.0,
-                            weight: 1.0
-                        }
-                    ],
-                    0.0,
-                    1.0
-                ),
-                1.5
-            )
-        }
     }
 }
