@@ -99,6 +99,7 @@ impl<'slice, T: Data> WeightedMedian<'slice, T> {
     }
 }
 
+#[inline]
 pub fn weighted_median<T: Data>(input: &mut [T]) -> f64 {
     WeightedMedian::new(input, 0.0, 0.0).calculate()
 }
