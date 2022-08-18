@@ -1,21 +1,21 @@
 #[inline]
 pub fn is_sorted<T: crate::Data>(data: &mut [T]) -> bool {
     let mut iter = data.into_iter().peekable();
-    // forward, backward
-    let mut status = (true, true);
+    let mut forward_sorted = true;
+    let mut backward_sorted = true;
 
     while let Some(current) = iter.next() {
         if let Some(next) = iter.peek() {
-            status.0 = status.0 && current.get_value() < next.get_value();
-            status.1 = status.1 && current.get_value() > next.get_value();
+            forward_sorted = forward_sorted && current.get_value() < next.get_value();
+            backward_sorted = backward_sorted && current.get_value() > next.get_value();
 
-            if !status.0 && !status.1 {
-                break;
+            if !backward_sorted && !forward_sorted {
+                return false;
             }
         }
     }
 
-    status.0 || status.1
+    return true;
 }
 
 #[cfg(test)]
