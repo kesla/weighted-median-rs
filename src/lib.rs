@@ -1,7 +1,5 @@
 mod partition;
 use partition::partition;
-mod is_sorted;
-use is_sorted::is_sorted;
 
 pub trait Data {
     fn get_value(&self) -> f64;
@@ -19,9 +17,7 @@ pub fn calculate<T: Data>(
     data: &mut [T],
     lower_weight_delta: f64,
     higher_weight_delta: f64,
-    previous_data_is_sorted: bool,
 ) -> f64 {
-    let data_is_sorted = previous_data_is_sorted || is_sorted(data);
     match data.len() {
         1 => data[0].get_value(),
         2 => {
@@ -36,10 +32,7 @@ pub fn calculate<T: Data>(
             }
         }
         _ => {
-            let pivot_index = match data_is_sorted {
-                true => data.len() / 2,
-                false => partition(data),
-            };
+            let pivot_index = partition(data);
 
             let lower_weight_sum = lower_weight_delta + weight_sum(&mut data[..pivot_index]);
             let higher_weight_sum = higher_weight_delta + weight_sum(&mut data[pivot_index + 1..]);
@@ -53,7 +46,6 @@ pub fn calculate<T: Data>(
                     next_data,
                     lower_weight_delta,
                     higher_weight_sum,
-                    data_is_sorted,
                 )
             } else {
                 let next_data = &mut data[pivot_index..];
@@ -61,7 +53,6 @@ pub fn calculate<T: Data>(
                     next_data,
                     lower_weight_sum,
                     higher_weight_delta,
-                    data_is_sorted,
                 )
             }
         }
@@ -70,7 +61,7 @@ pub fn calculate<T: Data>(
 
 #[inline]
 pub fn weighted_median<T: Data>(data: &mut [T]) -> f64 {
-    calculate(data, 0.0, 0.0, false)
+    calculate(data, 0.0, 0.0)
 }
 
 #[cfg(test)]
