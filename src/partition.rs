@@ -33,25 +33,25 @@ pub fn partition(data: &mut [Data], partition_index: usize) -> (usize, &mut [Dat
 #[inline]
 fn partition_without_duplicates(data: &mut [Data], pivot_value: f64) -> usize {
     let mut pivot_index = 0;
+    let mut end_index = data.len();
 
-    let mut iter = data.into_iter();
-    'main: while let Some(front) = iter.next() {
-        if front.value > pivot_value {
+    'main: while pivot_index < end_index {
+        if data[pivot_index].value > pivot_value {
             loop {
-                match iter.next_back() {
-                    Some(back) => {
-                        if back.value < pivot_value {
-                            std::mem::swap(front, back);
-                            break;
-                        }
-                    }
-                    None => {
-                        break 'main;
-                    }
+                end_index -= 1;
+                if data[end_index].value < pivot_value {
+                    data.swap(pivot_index, end_index);
+                    break;
+                }
+                
+                if pivot_index == end_index {
+                    break 'main;
                 }
             }
         }
+
         pivot_index += 1;
+
     }
 
     pivot_index
@@ -88,7 +88,7 @@ mod tests {
     }
 
     #[test]
-    fn partition_changed() {
+    fn partition_changed1() {
         let mut input = [
             Data {
                 value: 3.0,
