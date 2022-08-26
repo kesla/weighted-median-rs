@@ -43,7 +43,7 @@ fn partition_without_duplicates(data: &mut [Data], pivot_value: f64) -> usize {
                     data.swap(pivot_index, end_index);
                     break;
                 }
-                
+
                 if pivot_index == end_index {
                     break 'main;
                 }
@@ -51,7 +51,6 @@ fn partition_without_duplicates(data: &mut [Data], pivot_value: f64) -> usize {
         }
 
         pivot_index += 1;
-
     }
 
     pivot_index
