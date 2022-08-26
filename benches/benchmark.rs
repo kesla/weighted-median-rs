@@ -1,12 +1,31 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use weighted_median::{weighted_median, Data};
 
-fn generate_test_data<F: Fn(usize) -> (usize, usize)>(func: F) -> Vec<Data> {
+struct BenchData {
+    value: f64,
+    weight: f64,
+}
+
+impl Data for BenchData {
+    fn get_value(&self) -> f64 {
+        self.value
+    }
+
+    fn get_weight(&self) -> f64 {
+        self.weight
+    }
+
+    fn set_weight(&mut self, new_weight: f64) {
+        self.weight = new_weight;
+    }
+}
+
+fn generate_test_data<F: Fn(usize) -> (usize, usize)>(func: F) -> Vec<BenchData> {
     let mut data = Vec::new();
 
     for count in 0..100 {
         let (weight, value) = func(count);
-        data.push(Data {
+        data.push(BenchData {
             weight: weight as f64,
             value: value as f64,
         });
