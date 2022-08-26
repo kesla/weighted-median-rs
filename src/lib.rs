@@ -18,18 +18,19 @@ pub fn calculate<T: Data>(
     data: &mut [T],
     lower_weight_delta: f64,
     higher_weight_delta: f64,
-) -> f64 {
+) -> Option<f64> {
     match data.len() {
-        1 => data[0].get_value(),
+        0 => None,
+        1 => Some(data[0].get_value()),
         2 => {
             let lower = lower_weight_delta + data[0].get_weight();
             let higher = data[1].get_weight() + higher_weight_delta;
             if lower == higher {
-                (data[0].get_value() + data[1].get_value()) / 2.0
+                Some((data[0].get_value() + data[1].get_value()) / 2.0)
             } else if lower > higher {
-                data[0].get_value()
+                Some(data[0].get_value())
             } else {
-                data[1].get_value()
+                Some(data[1].get_value())
             }
         }
         _ => {
@@ -42,7 +43,7 @@ pub fn calculate<T: Data>(
                 lower_weight_sum + new_data[pivot_index].get_weight() + higher_weight_sum;
 
             if lower_weight_sum / weight_sum < 0.5 && higher_weight_sum / weight_sum < 0.5 {
-                new_data[pivot_index].get_value()
+                Some(new_data[pivot_index].get_value())
             } else if lower_weight_sum / weight_sum >= 0.5 {
                 let next_data = &mut new_data[..pivot_index + 1];
                 calculate(next_data, lower_weight_delta, higher_weight_sum)
@@ -55,7 +56,7 @@ pub fn calculate<T: Data>(
 }
 
 #[inline]
-pub fn weighted_median<T: Data>(data: &mut [T]) -> f64 {
+pub fn weighted_median<T: Data>(data: &mut [T]) -> Option<f64> {
     calculate(data, 0.0, 0.0)
 }
 
@@ -83,13 +84,21 @@ mod tests {
     }
 
     #[test]
+    fn empty_slice() {
+        assert_eq!(
+            weighted_median::<TestData>(&mut []),
+            None
+        )
+    }
+
+    #[test]
     fn one_element() {
         assert_eq!(
             weighted_median(&mut [TestData {
                 value: 7.0,
                 weight: 9.0
             }]),
-            7.0
+            Some(7.0)
         );
     }
 
@@ -106,7 +115,7 @@ mod tests {
                     weight: 2.0
                 }
             ]),
-            8.0
+            Some(8.0)
         );
         assert_eq!(
             weighted_median(&mut [
@@ -119,7 +128,7 @@ mod tests {
                     weight: 1.0
                 },
             ]),
-            8.0
+            Some(8.0)
         );
     }
 
@@ -136,7 +145,7 @@ mod tests {
                     weight: 1.0
                 }
             ]),
-            7.5
+            Some(7.5)
         )
     }
 
@@ -157,7 +166,7 @@ mod tests {
                     weight: 1.0
                 },
             ]),
-            2.0
+            Some(2.0)
         )
     }
 
@@ -178,7 +187,7 @@ mod tests {
                     weight: 1.0
                 },
             ]),
-            2.0
+            Some(2.0)
         )
     }
 
@@ -199,7 +208,7 @@ mod tests {
                     weight: 1.0
                 },
             ]),
-            2.0
+            Some(2.0)
         )
     }
 
@@ -220,7 +229,7 @@ mod tests {
                     weight: 5.0
                 },
             ]),
-            1.0
+            Some(1.0)
         )
     }
 
@@ -241,7 +250,7 @@ mod tests {
                     weight: 1.0
                 },
             ]),
-            3.0
+            Some(3.0)
         )
     }
 
@@ -262,7 +271,7 @@ mod tests {
                     weight: 1.0,
                 },
             ]),
-            2.5
+            Some(2.5)
         );
         assert_eq!(
             weighted_median(&mut [
@@ -279,7 +288,7 @@ mod tests {
                     weight: 2.0,
                 },
             ]),
-            2.5
+            Some(2.5)
         );
     }
 
@@ -304,7 +313,7 @@ mod tests {
                     weight: 0.25,
                 },
             ]),
-            2.5
+            Some(2.5)
         );
     }
 
@@ -333,7 +342,7 @@ mod tests {
                     weight: 0.2
                 }
             ]),
-            3.0
+            Some(3.0)
         );
     }
 
@@ -354,7 +363,7 @@ mod tests {
                     weight: 2.0
                 }
             ]),
-            1.5
+            Some(1.5)
         );
 
         assert_eq!(
@@ -372,7 +381,7 @@ mod tests {
                     weight: 1.0
                 }
             ]),
-            1.5
+            Some(1.5)
         );
     }
 }
