@@ -59,50 +59,14 @@ fn partition_without_duplicates<T: Data>(data: &mut [T], pivot_value: f64) -> us
 
 #[cfg(test)]
 mod tests {
+    use crate::tests::TestData;
+
     use super::partition;
-    use crate::Data;
-
-    #[derive(Debug, PartialEq)]
-    struct TestData {
-        value: f64,
-        weight: f64,
-    }
-
-    impl Data for TestData {
-        fn get_value(&self) -> f64 {
-            self.value
-        }
-
-        fn get_weight(&self) -> f64 {
-            self.weight
-        }
-    }
-
-    impl TestData {
-        fn value(value: f64) -> Self {
-            Self { value, weight: 1.0 }
-        }
-
-        fn weight(&self, weight: f64) -> Self {
-            Self {
-                value: self.value,
-                weight,
-            }
-        }
-    }
 
     #[test]
     fn partition_unchanged() {
-        let mut input = [
-            TestData::value(1.0),
-            TestData::value(2.0),
-            TestData::value(3.0),
-        ];
-        let expected = [
-            TestData::value(1.0),
-            TestData::value(2.0),
-            TestData::value(3.0),
-        ];
+        let mut input = [TestData::value(1).weight(1), TestData::value(2).weight(1), TestData::value(3).weight(1),];
+        let expected = [TestData::value(1).weight(1), TestData::value(2).weight(1), TestData::value(3).weight(1),];
 
         let (pivot_index, actual, pivot_extra_weight) = partition(&mut input, 1);
 
@@ -115,16 +79,8 @@ mod tests {
 
     #[test]
     fn partition_changed1() {
-        let mut input = [
-            TestData::value(3.0),
-            TestData::value(2.0),
-            TestData::value(1.0),
-        ];
-        let expected = [
-            TestData::value(1.0),
-            TestData::value(2.0),
-            TestData::value(3.0),
-        ];
+        let mut input = [TestData::value(3).weight(1), TestData::value(2).weight(1), TestData::value(1).weight(1),];
+        let expected = [TestData::value(1).weight(1), TestData::value(2).weight(1), TestData::value(3).weight(1),];
 
         let (pivot_index, actual, _) = partition(&mut input, 1);
 
@@ -136,41 +92,33 @@ mod tests {
 
     #[test]
     fn partition_changed2() {
-        let mut input = [
-            TestData::value(3.0),
-            TestData::value(1.0),
-            TestData::value(2.0),
-        ];
+        let mut input = [TestData::value(3).weight(1), TestData::value(1).weight(1), TestData::value(2).weight(1),];
 
         let (pivot_index, actual, _) = partition(&mut input, 1);
 
         assert_eq!(pivot_index, 0);
 
-        assert_eq!(actual[0], TestData::value(1.0),);
+        assert_eq!(actual[0], TestData::value(1).weight(1),);
         assert_eq!(actual.len(), 3);
 
-        assert_eq!(input[0], TestData::value(1.0),);
+        assert_eq!(input[0], TestData::value(1).weight(1),);
     }
 
     #[test]
     fn partition_changed3() {
-        let mut input = [
-            TestData::value(1.0),
-            TestData::value(3.0),
-            TestData::value(2.0),
-        ];
+        let mut input = [TestData::value(1).weight(1), TestData::value(3).weight(1), TestData::value(2).weight(1),];
 
         let (pivot_index, actual, _) = partition(&mut input, 1);
 
         assert_eq!(pivot_index, 2);
-        assert_eq!(actual[2], TestData::value(3.0),);
-        assert_eq!(input[2], TestData::value(3.0),);
+        assert_eq!(actual[2], TestData::value(3).weight(1),);
+        assert_eq!(input[2], TestData::value(3).weight(1),);
     }
 
     #[test]
     fn duplicated_values1() {
-        let mut input = [TestData::value(1.0), TestData::value(1.0).weight(0.5)];
-        let expected = [TestData::value(1.0).weight(0.5)];
+        let mut input = [TestData::value(1).weight(1), TestData::value(1).weight(5)];
+        let expected = [TestData::value(1).weight(5)];
         let (_, actual, pivot_extra_weight) = partition(&mut input, 1);
 
         assert_eq!(actual, expected);
@@ -181,11 +129,11 @@ mod tests {
     #[test]
     fn duplicated_values2() {
         let mut input = [
-            TestData::value(1.0),
-            TestData::value(1.0).weight(0.5),
-            TestData::value(2.0),
+            TestData::value(1).weight(1),
+            TestData::value(1).weight(5),
+            TestData::value(2).weight(1),
         ];
-        let expected = [TestData::value(1.0).weight(0.5), TestData::value(2.0)];
+        let expected = [TestData::value(1).weight(5), TestData::value(2).weight(1),];
         let (_, actual, pivot_extra_weight) = partition(&mut input, 1);
 
         assert_eq!(actual, expected);

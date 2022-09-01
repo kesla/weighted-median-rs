@@ -71,9 +71,20 @@ pub fn weighted_median<T: Data>(data: &mut [T]) -> Option<f64> {
 mod tests {
     use crate::{weighted_median, Data};
 
-    struct TestData {
+    #[derive(Debug, PartialEq)]
+    pub struct TestData {
         value: f64,
         weight: f64,
+    }
+
+    pub struct OnlyValue {
+        value: i32
+    }
+
+    impl OnlyValue {
+        pub fn weight(&self, weight: i32) -> TestData {
+            TestData { value: self.value.into(), weight: weight.into() }
+        }
     }
 
     impl Data for TestData {
@@ -84,7 +95,12 @@ mod tests {
         fn get_weight(&self) -> f64 {
             self.weight
         }
+    }
 
+    impl TestData {
+        pub fn value(value: i32) -> OnlyValue {
+            OnlyValue { value }
+        }
     }
 
     #[test]
@@ -95,10 +111,7 @@ mod tests {
     #[test]
     fn one_element() {
         assert_eq!(
-            weighted_median(&mut [TestData {
-                value: 7.0,
-                weight: 9.0
-            }]),
+            weighted_median(&mut [TestData::value(7).weight(9)]),
             Some(7.0)
         );
     }
@@ -107,27 +120,15 @@ mod tests {
     fn two_elements_different_weight() {
         assert_eq!(
             weighted_median(&mut [
-                TestData {
-                    value: 7.0,
-                    weight: 1.0
-                },
-                TestData {
-                    value: 8.0,
-                    weight: 2.0
-                }
+                TestData::value(7).weight(1),
+                TestData::value(8).weight(2),
             ]),
             Some(8.0)
         );
         assert_eq!(
             weighted_median(&mut [
-                TestData {
-                    value: 8.0,
-                    weight: 2.0
-                },
-                TestData {
-                    value: 7.0,
-                    weight: 1.0
-                },
+                TestData::value(8).weight(2),
+                TestData::value(7).weight(1),
             ]),
             Some(8.0)
         );
@@ -137,14 +138,8 @@ mod tests {
     fn two_elements_same_weight() {
         assert_eq!(
             weighted_median(&mut [
-                TestData {
-                    value: 7.0,
-                    weight: 1.0
-                },
-                TestData {
-                    value: 8.0,
-                    weight: 1.0
-                }
+                TestData::value(7).weight(1),
+                TestData::value(8).weight(1)
             ]),
             Some(7.5)
         )
@@ -154,18 +149,9 @@ mod tests {
     fn three_elements_is_first_element() {
         assert_eq!(
             weighted_median(&mut [
-                TestData {
-                    value: 2.0,
-                    weight: 1.0
-                },
-                TestData {
-                    value: 3.0,
-                    weight: 1.0
-                },
-                TestData {
-                    value: 1.0,
-                    weight: 1.0
-                },
+                TestData::value(2).weight(1),
+                TestData::value(3).weight(1),
+                TestData::value(1).weight(1),
             ]),
             Some(2.0)
         )
@@ -175,18 +161,9 @@ mod tests {
     fn three_elements_is_middle_element() {
         assert_eq!(
             weighted_median(&mut [
-                TestData {
-                    value: 3.0,
-                    weight: 1.0
-                },
-                TestData {
-                    value: 2.0,
-                    weight: 1.0
-                },
-                TestData {
-                    value: 1.0,
-                    weight: 1.0
-                },
+                TestData::value(3).weight(1),
+                TestData::value(2).weight(1),
+                TestData::value(1).weight(1),
             ]),
             Some(2.0)
         )
@@ -196,18 +173,9 @@ mod tests {
     fn three_elements_is_last_element() {
         assert_eq!(
             weighted_median(&mut [
-                TestData {
-                    value: 3.0,
-                    weight: 1.0
-                },
-                TestData {
-                    value: 1.0,
-                    weight: 1.0
-                },
-                TestData {
-                    value: 2.0,
-                    weight: 1.0
-                },
+                TestData::value(3).weight(1),
+                TestData::value(1).weight(1),
+                TestData::value(2).weight(1),
             ]),
             Some(2.0)
         )
@@ -217,14 +185,8 @@ mod tests {
     fn three_elements_is_smallest_element() {
         assert_eq!(
             weighted_median(&mut [
-                TestData {
-                    value: 3.0,
-                    weight: 1.0
-                },
-                TestData {
-                    value: 2.0,
-                    weight: 1.0
-                },
+                TestData::value(3).weight(1),
+                TestData::value(2).weight(1),
                 TestData {
                     value: 1.0,
                     weight: 5.0
@@ -238,18 +200,9 @@ mod tests {
     fn three_elements_is_biggest_element() {
         assert_eq!(
             weighted_median(&mut [
-                TestData {
-                    value: 3.0,
-                    weight: 5.0
-                },
-                TestData {
-                    value: 2.0,
-                    weight: 1.0
-                },
-                TestData {
-                    value: 1.0,
-                    weight: 1.0
-                },
+                TestData::value(3).weight(5),
+                TestData::value(2).weight(1),
+                TestData::value(1).weight(1),
             ]),
             Some(3.0)
         )
@@ -259,35 +212,17 @@ mod tests {
     fn three_elements_is_even() {
         assert_eq!(
             weighted_median(&mut [
-                TestData {
-                    value: 3.0,
-                    weight: 2.0,
-                },
-                TestData {
-                    value: 2.0,
-                    weight: 1.0,
-                },
-                TestData {
-                    value: 1.0,
-                    weight: 1.0,
-                },
+                TestData::value(3).weight(2),
+                TestData::value(2).weight(1),
+                TestData::value(1).weight(1),
             ]),
             Some(2.5)
         );
         assert_eq!(
             weighted_median(&mut [
-                TestData {
-                    value: 1.0,
-                    weight: 1.0,
-                },
-                TestData {
-                    value: 2.0,
-                    weight: 1.0,
-                },
-                TestData {
-                    value: 3.0,
-                    weight: 2.0,
-                },
+                TestData::value(1).weight(1),
+                TestData::value(2).weight(1),
+                TestData::value(3).weight(2),
             ]),
             Some(2.5)
         );
@@ -297,22 +232,10 @@ mod tests {
     fn four_elements_is_even() {
         assert_eq!(
             weighted_median(&mut [
-                TestData {
-                    value: 1.0,
-                    weight: 0.49,
-                },
-                TestData {
-                    value: 2.0,
-                    weight: 0.01,
-                },
-                TestData {
-                    value: 3.0,
-                    weight: 0.25,
-                },
-                TestData {
-                    value: 1000.0,
-                    weight: 0.25,
-                },
+                TestData::value(1).weight(49),
+                TestData::value(2).weight(1),
+                TestData::value(3).weight(25),
+                TestData::value(1000).weight(25),
             ]),
             Some(2.5)
         );
@@ -322,26 +245,11 @@ mod tests {
     fn five_elements_is_pivot_value() {
         assert_eq!(
             weighted_median(&mut [
-                TestData {
-                    value: 2.0,
-                    weight: 0.5
-                },
-                TestData {
-                    value: 1.0,
-                    weight: 0.5
-                },
-                TestData {
-                    value: 3.0,
-                    weight: 1.0
-                },
-                TestData {
-                    value: 10.0,
-                    weight: 0.8
-                },
-                TestData {
-                    value: 8.0,
-                    weight: 0.2
-                }
+                TestData::value(2).weight(5),
+                TestData::value(1).weight(5),
+                TestData::value(3).weight(1),
+                TestData::value(10).weight(8),
+                TestData::value(8).weight(2),
             ]),
             Some(3.0)
         );
@@ -351,36 +259,18 @@ mod tests {
     fn duplicated_values() {
         assert_eq!(
             weighted_median(&mut [
-                TestData {
-                    value: 1.0,
-                    weight: 1.0
-                },
-                TestData {
-                    value: 1.0,
-                    weight: 1.0
-                },
-                TestData {
-                    value: 2.0,
-                    weight: 2.0
-                }
+                TestData::value(1).weight(1),
+                TestData::value(1).weight(1),
+                TestData::value(2).weight(2),
             ]),
             Some(1.5)
         );
 
         assert_eq!(
             weighted_median(&mut [
-                TestData {
-                    value: 1.0,
-                    weight: 2.0
-                },
-                TestData {
-                    value: 2.0,
-                    weight: 1.0
-                },
-                TestData {
-                    value: 2.0,
-                    weight: 1.0
-                }
+                TestData::value(1).weight(2),
+                TestData::value(2).weight(1),
+                TestData::value(2).weight(1)
             ]),
             Some(1.5)
         );
