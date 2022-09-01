@@ -62,6 +62,7 @@ mod tests {
     use super::partition;
     use crate::Data;
 
+    #[derive(Debug, PartialEq)]
     struct TestData {
         value: f64,
         weight: f64,
@@ -77,148 +78,119 @@ mod tests {
         }
     }
 
+    impl TestData {
+        fn value(value: f64) -> Self {
+            Self { value, weight: 1.0 }
+        }
+
+        fn weight(&self, weight: f64) -> Self {
+            Self {
+                value: self.value,
+                weight,
+            }
+        }
+    }
+
     #[test]
     fn partition_unchanged() {
         let mut input = [
-            TestData {
-                value: 1.0,
-                weight: 1.0,
-            },
-            TestData {
-                value: 2.0,
-                weight: 1.0,
-            },
-            TestData {
-                value: 3.0,
-                weight: 1.0,
-            },
+            TestData::value(1.0),
+            TestData::value(2.0),
+            TestData::value(3.0),
+        ];
+        let expected = [
+            TestData::value(1.0),
+            TestData::value(2.0),
+            TestData::value(3.0),
         ];
 
-        let (pivot_index, _, pivot_extra_weight) = partition(&mut input, 1);
+        let (pivot_index, actual, pivot_extra_weight) = partition(&mut input, 1);
 
-        assert_eq!(pivot_index, 1, "pivot_index is 1");
-        assert_eq!(input[0].get_value(), 1.0, "first value is 1.0");
-        assert_eq!(input[1].get_value(), 2.0, "second value is 2.0");
-        assert_eq!(input[2].get_value(), 3.0, "third value is 3.0");
+        assert_eq!(pivot_index, 1);
+        assert_eq!(actual, expected);
         assert_eq!(pivot_extra_weight, 0.0);
+
+        assert_eq!(input, expected);
     }
 
     #[test]
     fn partition_changed1() {
         let mut input = [
-            TestData {
-                value: 3.0,
-                weight: 1.0,
-            },
-            TestData {
-                value: 2.0,
-                weight: 1.0,
-            },
-            TestData {
-                value: 1.0,
-                weight: 1.0,
-            },
+            TestData::value(3.0),
+            TestData::value(2.0),
+            TestData::value(1.0),
+        ];
+        let expected = [
+            TestData::value(1.0),
+            TestData::value(2.0),
+            TestData::value(3.0),
         ];
 
-        let (pivot_index, _, _) = partition(&mut input, 1);
+        let (pivot_index, actual, _) = partition(&mut input, 1);
 
         assert_eq!(pivot_index, 1);
+        assert_eq!(actual, expected);
 
-        assert_eq!(input[0].get_value(), 1.0);
-        assert_eq!(input[1].get_value(), 2.0);
-        assert_eq!(input[2].get_value(), 3.0);
+        assert_eq!(input, expected);
     }
 
     #[test]
     fn partition_changed2() {
         let mut input = [
-            TestData {
-                value: 3.0,
-                weight: 1.0,
-            },
-            TestData {
-                value: 1.0,
-                weight: 1.0,
-            },
-            TestData {
-                value: 2.0,
-                weight: 1.0,
-            },
+            TestData::value(3.0),
+            TestData::value(1.0),
+            TestData::value(2.0),
         ];
 
-        let (pivot_index, _, _) = partition(&mut input, 1);
+        let (pivot_index, actual, _) = partition(&mut input, 1);
 
         assert_eq!(pivot_index, 0);
 
-        assert_eq!(input[0].get_value(), 1.0);
+        assert_eq!(actual[0], TestData::value(1.0),);
+        assert_eq!(actual.len(), 3);
+
+        assert_eq!(input[0], TestData::value(1.0),);
     }
 
     #[test]
     fn partition_changed3() {
         let mut input = [
-            TestData {
-                value: 1.0,
-                weight: 1.0,
-            },
-            TestData {
-                value: 3.0,
-                weight: 1.0,
-            },
-            TestData {
-                value: 2.0,
-                weight: 1.0,
-            },
+            TestData::value(1.0),
+            TestData::value(3.0),
+            TestData::value(2.0),
         ];
 
-        let (pivot_index, _, _) = partition(&mut input, 1);
+        let (pivot_index, actual, _) = partition(&mut input, 1);
 
         assert_eq!(pivot_index, 2);
-        assert_eq!(input[2].get_value(), 3.0);
+        assert_eq!(actual[2], TestData::value(3.0),);
+        assert_eq!(input[2], TestData::value(3.0),);
     }
 
     #[test]
     fn duplicated_values1() {
-        let mut input = [
-            TestData {
-                value: 1.0,
-                weight: 1.0,
-            },
-            TestData {
-                value: 1.0,
-                weight: 0.5,
-            },
-        ];
-        let (_, result, pivot_extra_weight) = partition(&mut input, 1);
+        let mut input = [TestData::value(1.0), TestData::value(1.0).weight(0.5)];
+        let expected = [TestData::value(1.0).weight(0.5)];
+        let (_, actual, pivot_extra_weight) = partition(&mut input, 1);
 
-        assert_eq!(result.len(), 1);
-        assert_eq!(result[0].get_value(), 1.0);
-        assert_eq!(result[0].get_weight(), 0.5);
+        assert_eq!(actual, expected);
         assert_eq!(pivot_extra_weight, 1.0);
+        assert_eq!(input[0], expected[0]);
     }
 
     #[test]
     fn duplicated_values2() {
         let mut input = [
-            TestData {
-                value: 1.0,
-                weight: 1.0,
-            },
-            TestData {
-                value: 1.0,
-                weight: 0.5,
-            },
-            TestData {
-                value: 2.0,
-                weight: 1.0,
-            },
+            TestData::value(1.0),
+            TestData::value(1.0).weight(0.5),
+            TestData::value(2.0),
         ];
-        let (_, result, pivot_extra_weight) = partition(&mut input, 1);
+        let expected = [TestData::value(1.0).weight(0.5), TestData::value(2.0)];
+        let (_, actual, pivot_extra_weight) = partition(&mut input, 1);
 
-        assert_eq!(result.len(), 2);
-        assert_eq!(result[0].get_value(), 1.0);
-        assert_eq!(result[0].get_weight(), 0.5);
-        assert_eq!(result[1].get_value(), 2.0);
-        assert_eq!(result[1].get_weight(), 1.0);
+        assert_eq!(actual, expected);
         assert_eq!(pivot_extra_weight, 1.0);
+
+        assert_eq!(input[..2], expected);
     }
 }
