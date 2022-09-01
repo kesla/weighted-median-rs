@@ -14,10 +14,6 @@ impl Data for BenchData {
     fn get_weight(&self) -> f64 {
         self.weight
     }
-
-    fn set_weight(&mut self, new_weight: f64) {
-        self.weight = new_weight;
-    }
 }
 
 fn generate_test_data<F: Fn(usize) -> (usize, usize)>(func: F) -> Vec<BenchData> {

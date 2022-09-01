@@ -4,7 +4,6 @@ use partition::partition;
 pub trait Data {
     fn get_value(&self) -> f64;
     fn get_weight(&self) -> f64;
-    fn set_weight(&mut self, new_weight: f64);
 }
 
 #[inline]
@@ -34,22 +33,30 @@ pub fn calculate<T: Data>(
             }
         }
         _ => {
-            let (pivot_index, new_data) = partition(data, data.len() / 2);
+            let (pivot_index, new_data, pivot_extra_weight) = partition(data, data.len() / 2);
 
+            let pivot_weight = new_data[pivot_index].get_weight() + pivot_extra_weight;
             let lower_weight_sum = lower_weight_delta + weight_sum(&mut new_data[..pivot_index]);
             let higher_weight_sum =
                 higher_weight_delta + weight_sum(&mut new_data[pivot_index + 1..]);
-            let weight_sum =
-                lower_weight_sum + new_data[pivot_index].get_weight() + higher_weight_sum;
+            let weight_sum = lower_weight_sum + pivot_weight + higher_weight_sum;
 
             if lower_weight_sum / weight_sum < 0.5 && higher_weight_sum / weight_sum < 0.5 {
                 Some(new_data[pivot_index].get_value())
             } else if lower_weight_sum / weight_sum >= 0.5 {
                 let next_data = &mut new_data[..pivot_index + 1];
-                calculate(next_data, lower_weight_delta, higher_weight_sum)
+                calculate(
+                    next_data,
+                    lower_weight_delta,
+                    higher_weight_sum + pivot_extra_weight,
+                )
             } else {
                 let next_data = &mut new_data[pivot_index..];
-                calculate(next_data, lower_weight_sum, higher_weight_delta)
+                calculate(
+                    next_data,
+                    lower_weight_sum + pivot_extra_weight,
+                    higher_weight_delta,
+                )
             }
         }
     }
@@ -78,17 +85,11 @@ mod tests {
             self.weight
         }
 
-        fn set_weight(&mut self, new_weight: f64) {
-            self.weight = new_weight;
-        }
     }
 
     #[test]
     fn empty_slice() {
-        assert_eq!(
-            weighted_median::<TestData>(&mut []),
-            None
-        )
+        assert_eq!(weighted_median::<TestData>(&mut []), None)
     }
 
     #[test]

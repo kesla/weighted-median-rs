@@ -1,17 +1,18 @@
 use crate::Data;
 
 #[inline]
-pub fn partition<T: Data>(data: &mut [T], partition_index: usize) -> (usize, &mut [T]) {
+pub fn partition<T: Data>(data: &mut [T], partition_index: usize) -> (usize, &mut [T], f64) {
     data.swap(partition_index, 0);
     let pivot_value = data[0].get_value();
 
     let mut len = data.len();
     let mut i = 1;
+    let mut pivot_extra_weight = 0.0;
 
     while i < len {
         if data[i].get_value() == pivot_value {
             len -= 1;
-            data[0].set_weight(data[0].get_weight() + data[i].get_weight());
+            pivot_extra_weight += data[i].get_weight();
             data.swap(i, len);
         } else {
             i += 1;
@@ -27,7 +28,7 @@ pub fn partition<T: Data>(data: &mut [T], partition_index: usize) -> (usize, &mu
 
     new_data.swap(0, pivot_index);
 
-    (pivot_index, new_data)
+    (pivot_index, new_data, pivot_extra_weight)
 }
 
 #[inline]
@@ -74,10 +75,6 @@ mod tests {
         fn get_weight(&self) -> f64 {
             self.weight
         }
-
-        fn set_weight(&mut self, new_weight: f64) {
-            self.weight = new_weight;
-        }
     }
 
     #[test]
@@ -97,12 +94,13 @@ mod tests {
             },
         ];
 
-        let (pivot_index, _) = partition(&mut input, 1);
+        let (pivot_index, _, pivot_extra_weight) = partition(&mut input, 1);
 
         assert_eq!(pivot_index, 1, "pivot_index is 1");
         assert_eq!(input[0].get_value(), 1.0, "first value is 1.0");
         assert_eq!(input[1].get_value(), 2.0, "second value is 2.0");
         assert_eq!(input[2].get_value(), 3.0, "third value is 3.0");
+        assert_eq!(pivot_extra_weight, 0.0);
     }
 
     #[test]
@@ -122,7 +120,7 @@ mod tests {
             },
         ];
 
-        let (pivot_index, _) = partition(&mut input, 1);
+        let (pivot_index, _, _) = partition(&mut input, 1);
 
         assert_eq!(pivot_index, 1);
 
@@ -148,7 +146,7 @@ mod tests {
             },
         ];
 
-        let (pivot_index, _) = partition(&mut input, 1);
+        let (pivot_index, _, _) = partition(&mut input, 1);
 
         assert_eq!(pivot_index, 0);
 
@@ -172,7 +170,7 @@ mod tests {
             },
         ];
 
-        let (pivot_index, _) = partition(&mut input, 1);
+        let (pivot_index, _, _) = partition(&mut input, 1);
 
         assert_eq!(pivot_index, 2);
         assert_eq!(input[2].get_value(), 3.0);
@@ -190,11 +188,12 @@ mod tests {
                 weight: 0.5,
             },
         ];
-        let (_, result) = partition(&mut input, 1);
+        let (_, result, pivot_extra_weight) = partition(&mut input, 1);
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].get_value(), 1.0);
-        assert_eq!(result[0].get_weight(), 1.5);
+        assert_eq!(result[0].get_weight(), 0.5);
+        assert_eq!(pivot_extra_weight, 1.0);
     }
 
     #[test]
@@ -213,12 +212,13 @@ mod tests {
                 weight: 1.0,
             },
         ];
-        let (_, result) = partition(&mut input, 1);
+        let (_, result, pivot_extra_weight) = partition(&mut input, 1);
 
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].get_value(), 1.0);
-        assert_eq!(result[0].get_weight(), 1.5);
+        assert_eq!(result[0].get_weight(), 0.5);
         assert_eq!(result[1].get_value(), 2.0);
         assert_eq!(result[1].get_weight(), 1.0);
+        assert_eq!(pivot_extra_weight, 1.0);
     }
 }
