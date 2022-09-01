@@ -22,6 +22,10 @@ pub fn calculate<T: Data>(
         0 => None,
         1 => Some(data[0].get_value()),
         2 => {
+            if data[0].get_value() > data[1].get_value() {
+                data.swap(0, 1);
+            }
+
             let lower = lower_weight_delta + data[0].get_weight();
             let higher = data[1].get_weight() + higher_weight_delta;
             if lower == higher {
